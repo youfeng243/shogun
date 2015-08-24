@@ -8,86 +8,117 @@ notifications:
     on_failure: always
     template:
       - "it's %{author}'s turn to pay the next round of drinks for the massacre he caused in %{repository}: %{build_url}"
+cache:
+  - apt
+  - pip
 matrix:
   fast_finish: true
   include:
     - compiler: gcc
+      sudo: false
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2], sources: [kubuntu-backports] } }      
     - compiler: clang
+      sudo: false
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2], sources: [kubuntu-backports] } }
     - compiler: gcc
+      sudo: false
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2], sources: [kubuntu-backports] } }      
       env:
       - CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON -DENABLE_CCACHE=OFF"
-      - CUSTOM_PKG="sudo pip install -q cpp-coveralls"
+      - CUSTOM_PKG="pip install -q cpp-coveralls --user `whoami`"
       - COVERALLS=1
     - compiler: clang
+      sudo: false
       python: "2.7_with_system_site_packages"
       language: python
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2,python-numpy,python-scipy,swig], sources: [kubuntu-backports] } }
       env:
       - CMAKE_OPTIONS="-DPythonModular=ON -DTRAVIS_DISABLE_UNIT_TESTS=ON -DTRAVIS_DISABLE_LIBSHOGUN_TESTS=ON"
-      - EXTRA_PACKAGES="python-numpy python-scipy swig2.0"
       - CC=clang
       - CXX=clang++
     - compiler: clang
+      sudo: false
       python: 3.3
       language: python
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2,swig], sources: [kubuntu-backports] } }
       env:
       - CMAKE_OPTIONS="-DPythonModular=ON -DCMAKE_PREFIX_PATH=/home/travis/miniconda/envs/testenv -DTRAVIS_DISABLE_UNIT_TESTS=ON -DTRAVIS_DISABLE_LIBSHOGUN_TESTS=ON"
-      - EXTRA_PACKAGES="swig2.0"
       - CC=clang
       - CXX=clang++
     - compiler: clang
+      sudo: false
       rvm: 1.8.7
       language: ruby
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libreadline6-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2,swig], sources: [kubuntu-backports] } }
       env:
       - CMAKE_OPTIONS="-DRubyModular=ON -DTRAVIS_DISABLE_UNIT_TESTS=ON -DTRAVIS_DISABLE_LIBSHOGUN_TESTS=ON"
       - CUSTOM_PKG="gem install narray"
-      - EXTRA_PACKAGES="swig2.0"
       - CC=clang
       - CXX=clang++
     - compiler: clang
+      sudo: false
       jdk: oraclejdk7
       language: java
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2,swig,jblas], sources: [kubuntu-backports] } }
       env:
       - CMAKE_OPTIONS="-DJavaModular=ON -DTRAVIS_DISABLE_UNIT_TESTS=ON -DTRAVIS_DISABLE_LIBSHOGUN_TESTS=ON"
-      - EXTRA_PACKAGES="jblas swig2.0"
       - CC=clang
       - CXX=clang++
     - compiler: clang
+      sudo: false
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2,mono-devel,mono-gmcs,cli-common-dev,swig], sources: [kubuntu-backports] } }
       env:
       - CMAKE_OPTIONS="-DCSharpModular=ON -DTRAVIS_DISABLE_UNIT_TESTS=ON -DTRAVIS_DISABLE_LIBSHOGUN_TESTS=ON"
-      - EXTRA_PACKAGES="mono-devel mono-gmcs cli-common-dev swig2.0"
       - CC=clang
       - CXX=clang++
     - compiler: clang
+      sudo: false
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2,swig,lua5.1,liblua5.1-0-dev], sources: [kubuntu-backports] } }
       env:
       - CMAKE_OPTIONS="-DLuaModular=ON -DTRAVIS_DISABLE_UNIT_TESTS=ON -DTRAVIS_DISABLE_LIBSHOGUN_TESTS=ON"
-      - EXTRA_PACKAGES="lua5.1 liblua5.1-0-dev swig2.0"
       - CC=clang
       - CXX=clang++
     - compiler: gcc
+      sudo: false
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2,octave,liboctave-dev,swig], sources: [kubuntu-backports] } }
       env:
       - CMAKE_OPTIONS="-DOctaveModular=ON -DTRAVIS_DISABLE_UNIT_TESTS=ON -DTRAVIS_DISABLE_LIBSHOGUN_TESTS=ON"
-      - EXTRA_PACKAGES="octave liboctave-dev swig2.0"
     - compiler: clang
+      sudo: false
+      addons: { apt: { packages: [libarpack2-dev,libatlas-base-dev,libblas-dev,libglpk-dev,
+        libhdf5-serial-dev,libxml2-dev,libsnappy-dev,liblzo2-dev,liblzma-dev,liblapack-dev,libeigen3-dev,
+        libjson-c-dev,cmake,python-jinja2,r-base-core,swig], sources: [kubuntu-backports] } }
       env:
       - CMAKE_OPTIONS="-DRModular=ON -DTRAVIS_DISABLE_UNIT_TESTS=ON -DTRAVIS_DISABLE_LIBSHOGUN_TESTS=ON"
-      - EXTRA_PACKAGES="r-base-core swig2.0"
       - CC=clang
       - CXX=clang++
     - language: objective-c
       env:
       - OSX=1
-      - CUSTOM_PKG="curl -O -L https://raw.github.com/rudix-mac/package-manager/master/rudix.py && sudo python rudix.py install rudix && sudo rudix install jinja2"
+      - CUSTOM_PKG="curl -s https://raw.githubusercontent.com/rudix-mac/rpm/2015.6.1/rudix.py | sudo python - install rudix && sudo rudix install jinja2"
 before_install:
-  - if [ -z $OSX ] ; then
-      sudo apt-add-repository -y ppa:kubuntu-ppa/backports ;
-      sudo apt-add-repository -y ppa:dr-graef/octave-3.6.precise ;
-      sudo apt-add-repository -y ppa:yade-users/external ;
-      sudo apt-add-repository -y ppa:ondrej/php5 ;
-      sudo apt-add-repository -y ppa:robotics/ppa ;
-      sudo apt-add-repository -y ppa:swt-techie/swig ;
-      sudo apt-get update -qq ;
-    else
-      brew update ;
+  - if [ ! -z $OSX ] ; then
+      brew update && brew tap homebrew/science ;
     fi
   - if [[ $TRAVIS_PYTHON_VERSION == '3.3' ]] ; then
       wget http://repo.continuum.io/miniconda/Miniconda3-3.4.2-Linux-x86_64.sh -O miniconda.sh ;
@@ -97,24 +128,21 @@ before_install:
       conda update conda ;
     fi
 install:
-  - if [ -z $OSX ] ; then
-      sudo apt-get install -qq libbz2-dev cdbs libarpack2-dev libatlas-base-dev libblas-dev libglpk-dev libhdf5-serial-dev zlib1g-dev libxml2-dev libreadline6-dev libreadline-dev libsnappy-dev liblzo2-dev liblzma-dev liblapack-dev libeigen3-dev libjson-c-dev libnlopt-dev gdb cmake python-jinja2 ccache $EXTRA_PACKAGES ;
-    else
-      brew install ccache eigen;
+  - if [ ! -z $OSX ] ; then
+      brew install ccache eigen nlopt glpk lzo snappy lp_solve arpack colpack hdf5 xz;
     fi
   - eval $CUSTOM_PKG
   - if [[ $TRAVIS_PYTHON_VERSION == '3.3' ]] ; then conda create -n testenv python=$TRAVIS_PYTHON_VERSION numpy scipy && source activate testenv ; fi
 before_script:
-  - mkdir build
-  - cd build
-  - cmake -DENABLE_TESTING=ON $CMAKE_OPTIONS ..
+  - mkdir build && cd build
+  - cmake -DCMAKE_INSTALL_PREFIX=$HOME/shogun-build -DENABLE_TESTING=ON $CMAKE_OPTIONS ..
 script:
   - if [ -z "$CMAKE_OPTIONS" -o -n "$COVERALLS" ] ; then
       make -j 2 ;
     else
       make -j 4 ;
     fi
-  - sudo make install
+  - make install
   - ctest --output-on-failure -j 2
 after_success:
   - if [ $COVERALLS ] ; then
