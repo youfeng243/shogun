@@ -41,7 +41,7 @@
 #include <shogun/machine/gp/ZeroMean.h>
 #include <shogun/machine/gp/ConstMean.h>
 #include <shogun/machine/gp/GaussianLikelihood.h>
-#include <shogun/machine/gp/GaussianARDFITCKernel.h>
+#include <shogun/machine/gp/GaussianARDSparseKernel.h>
 #include <shogun/mathematics/Math.h>
 #include <gtest/gtest.h>
 
@@ -96,7 +96,7 @@ TEST(FITCInferenceMethod,get_cholesky)
 		   mean, labels_train, liklihood, inducing_features_train);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	// comparison of posterior cholesky with result from GPML package:
 	// L =
@@ -203,7 +203,7 @@ TEST(FITCInferenceMethod,get_cholesky_sparse)
 	inf->set_scale(2.5);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	// comparison of posterior cholesky with result from GPML package:
 	SGMatrix<float64_t> L=inf->get_cholesky();
@@ -273,7 +273,7 @@ TEST(FITCInferenceMethod,get_alpha)
 		   mean, labels_train, liklihood, inducing_features_train);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	// comparison of posterior alpha with result from GPML package:
 	// alpha =
@@ -345,7 +345,7 @@ TEST(FITCInferenceMethod,get_alpha_sparse)
 	inf->set_scale(2.5);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	// comparison of posterior alpha with result from GPML package:
 	SGVector<float64_t> alpha=inf->get_alpha();
@@ -407,7 +407,7 @@ TEST(FITCInferenceMethod,get_negative_log_marginal_likelihood)
 		   mean, labels_train, liklihood, inducing_features_train);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	// comparison of posterior negative marginal likelihood with
 	// result from GPML package:
@@ -470,7 +470,7 @@ TEST(FITCInferenceMethod,get_negative_log_marginal_likelihood_sparse)
 	inf->set_scale(2.5);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	// comparison of posterior negative marginal likelihood with result from
 	// GPML package
@@ -531,7 +531,7 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives)
 		mean, labels_train, lik, inducing_features_train);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	// build parameter dictionary
 	CMap<TParameter*, CSGObject*>* parameter_dictionary=new CMap<TParameter*, CSGObject*>();
@@ -542,15 +542,15 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives)
 		inf->get_negative_log_marginal_likelihood_derivatives(parameter_dictionary);
 
 	// get parameters to compute derivatives
-	TParameter* width_param=kernel->m_gradient_parameters->get_parameter("width");
-	TParameter* scale_param=inf->m_gradient_parameters->get_parameter("scale");
-	TParameter* sigma_param=lik->m_gradient_parameters->get_parameter("sigma");
+	TParameter* width_param=kernel->m_gradient_parameters->get_parameter("log_width");
+	TParameter* scale_param=inf->m_gradient_parameters->get_parameter("log_scale");
+	TParameter* sigma_param=lik->m_gradient_parameters->get_parameter("log_sigma");
 
-	float64_t dnlZ_ell=4*(gradient->get_element(width_param))[0];
+	float64_t dnlZ_ell=(gradient->get_element(width_param))[0];
 	float64_t dnlZ_sf2=(gradient->get_element(scale_param))[0];
 	float64_t dnlZ_lik=(gradient->get_element(sigma_param))[0];
 
-	TParameter* noise_param=inf->m_gradient_parameters->get_parameter("inducing_noise");
+	TParameter* noise_param=inf->m_gradient_parameters->get_parameter("log_inducing_noise");
 	float64_t dnlZ_noise=(gradient->get_element(noise_param))[0];
 	dnlZ_lik+=dnlZ_noise;
 	// comparison of partial derivatives of negative log marginal likelihood
@@ -621,7 +621,7 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_sparse)
 	inf->set_scale(2.5);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	// build parameter dictionary
 	CMap<TParameter*, CSGObject*>* parameter_dictionary=new CMap<TParameter*, CSGObject*>();
@@ -632,15 +632,15 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_sparse)
 		inf->get_negative_log_marginal_likelihood_derivatives(parameter_dictionary);
 
 	// get parameters to compute derivatives
-	TParameter* width_param=kernel->m_gradient_parameters->get_parameter("width");
-	TParameter* scale_param=inf->m_gradient_parameters->get_parameter("scale");
-	TParameter* sigma_param=lik->m_gradient_parameters->get_parameter("sigma");
+	TParameter* width_param=kernel->m_gradient_parameters->get_parameter("log_width");
+	TParameter* scale_param=inf->m_gradient_parameters->get_parameter("log_scale");
+	TParameter* sigma_param=lik->m_gradient_parameters->get_parameter("log_sigma");
 
-	float64_t dnlZ_ell=4*CMath::sq(ell)*(gradient->get_element(width_param))[0];
-	float64_t dnlZ_sf2=2.5*(gradient->get_element(scale_param))[0];
+	float64_t dnlZ_ell=(gradient->get_element(width_param))[0];
+	float64_t dnlZ_sf2=(gradient->get_element(scale_param))[0];
 	float64_t dnlZ_lik=(gradient->get_element(sigma_param))[0];
 
-	TParameter* noise_param=inf->m_gradient_parameters->get_parameter("inducing_noise");
+	TParameter* noise_param=inf->m_gradient_parameters->get_parameter("log_inducing_noise");
 	float64_t dnlZ_noise=(gradient->get_element(noise_param))[0];
 	dnlZ_lik+=dnlZ_noise;
 
@@ -656,6 +656,7 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_sparse)
 	SG_UNREF(inf);
 }
 #ifdef HAVE_LINALG_LIB
+//bug
 TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_ARD_kernel1)
 {
 	index_t n=6;
@@ -701,19 +702,18 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_ARD_kernel1)
 	CRegressionLabels* labels_train=new CRegressionLabels(lab_train);
 
 	// choose Gaussian kernel with sigma = 2 and zero mean function
-	float64_t ell=1.0;
-	CLinearARDKernel* kernel=new CGaussianARDFITCKernel(10, 2*ell*ell);
+	CGaussianARDSparseKernel* kernel=new CGaussianARDSparseKernel(10);
 
 	int32_t t_dim=2;
 	SGMatrix<float64_t> weights(t_dim,dim);
-	//the weights is a upper triangular matrix since GPML 3.5 only supports this type
+	//the weights is a lower triangular matrix
 	float64_t weight1=0.02;
 	float64_t weight2=-0.4;
 	float64_t weight3=0;
 	float64_t weight4=0.01;
 	weights(0,0)=weight1;
-	weights(0,1)=weight2;
-	weights(1,0)=weight3;
+	weights(1,0)=weight2;
+	weights(0,1)=weight3;
 	weights(1,1)=weight4;
 	kernel->set_matrix_weights(weights);
 
@@ -729,7 +729,7 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_ARD_kernel1)
 		mean, labels_train, lik, latent_features_train);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	float64_t scale=4.0;
 	inf->set_scale(scale);
@@ -743,22 +743,18 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_ARD_kernel1)
 		inf->get_negative_log_marginal_likelihood_derivatives(parameter_dictionary);
 
 	// get parameters to compute derivatives
-	TParameter* scale_param=inf->m_gradient_parameters->get_parameter("scale");
-	TParameter* sigma_param=lik->m_gradient_parameters->get_parameter("sigma");
-	TParameter* noise_param=inf->m_gradient_parameters->get_parameter("inducing_noise");
-	TParameter* weights_param=kernel->m_gradient_parameters->get_parameter("weights");
-		TParameter* mean_param=mean->m_gradient_parameters->get_parameter("mean");
+	TParameter* scale_param=inf->m_gradient_parameters->get_parameter("log_scale");
+	TParameter* sigma_param=lik->m_gradient_parameters->get_parameter("log_sigma");
+	TParameter* noise_param=inf->m_gradient_parameters->get_parameter("log_inducing_noise");
+	TParameter* weights_param=kernel->m_gradient_parameters->get_parameter("log_weights");
+	TParameter* mean_param=mean->m_gradient_parameters->get_parameter("mean");
 
-	float64_t dnlZ_sf2=scale*(gradient->get_element(scale_param))[0];
+	float64_t dnlZ_sf2=(gradient->get_element(scale_param))[0];
 	float64_t dnlZ_lik=(gradient->get_element(sigma_param))[0];
 	float64_t dnlZ_noise=(gradient->get_element(noise_param))[0];
 	float64_t dnlZ_mean=(gradient->get_element(mean_param))[0];
 
 	SGVector<float64_t> dnlz_weights_vec=gradient->get_element(weights_param);
-	SGMatrix<float64_t> dnlz_weights(dnlz_weights_vec.vector,t_dim, dim, false);
-	//diagonal elements are in the log domain
-	dnlz_weights(0,0)*=weight1;
-	dnlz_weights(1,1)*=weight4;
 
 	dnlZ_lik+=dnlZ_noise;
 
@@ -774,19 +770,16 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_ARD_kernel1)
 	//diagonal elements of the matrix are in the log domain
 	//while off-diagonal elements are in natrual domain
 
-	EXPECT_NEAR(dnlz_weights(0,0), -0.326900947549438, 1E-10);
-	EXPECT_NEAR(dnlz_weights(0,1), -6.119973491296843, 1E-10);
-	//dnlz_weights(1,0) should be different (non-zero)
-	//since the kernel matrix in the Shogun's implementation does not
-	//have the "upper triangular matrix" constraint
-	EXPECT_NEAR(dnlz_weights(1,1), 0.002268754179272, 1E-10);
+	EXPECT_NEAR(dnlz_weights_vec[0], -0.326900947549438, 1E-10);
+	EXPECT_NEAR(dnlz_weights_vec[1], -6.119973491296843, 1E-10);
+	EXPECT_NEAR(dnlz_weights_vec[2], 0.002268754179272, 1E-10);
 
 	EXPECT_NEAR(dnlZ_lik, 0.260126513715885,1E-10);
 	EXPECT_NEAR(dnlZ_mean, 0.110630684381327, 1E-10);
 	EXPECT_NEAR(dnlZ_sf2, 4.756295043167128, 1E-10);
 
 	//Note that in the latest GPML3.5, derivatives wrt xu (covSEfact) does not support yet
-	//In Shohun's implementation, the derivatives wrt xu are supported. 
+	//In Shohun's implementation, the derivatives wrt xu are supported.
 	//TParameter* lat_param=inf->m_gradient_parameters->get_parameter("inducing_features");
 	//SGVector<float64_t> tmp=gradient->get_element(lat_param);
 	//SGMatrix<float64_t> deriv_lat(tmp.vector, dim, m, false);
@@ -853,24 +846,24 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_ARD_kernel2)
 	CRegressionLabels* labels_train=new CRegressionLabels(lab_train);
 
 	// choose Gaussian kernel with sigma = 2 and zero mean function
-	float64_t ell=1.0;
-	CLinearARDKernel* kernel=new CGaussianARDFITCKernel(10, 2*ell*ell);
+	CGaussianARDSparseKernel* kernel=new CGaussianARDSparseKernel(10);
 
 	int32_t t_dim=2;
-	SGMatrix<float64_t> weights(t_dim,dim);
-	//the weights is a upper triangular matrix since GPML 3.5 only supports this type
+	SGMatrix<float64_t> weights(dim,t_dim);
+	//the weights is a lower triangular matrix
 	//weights =
-	//0.02 -0.40 -0.01
-	//0    0.03  -0.20
+	// 0.02  0
+	//-0.40  0.03
+	//-0.01  -0.20
 	float64_t weight00=0.02;
 	float64_t weight11=0.03;
 	weights(0,0)=weight00;
-	weights(0,1)=-0.40;
-	weights(0,2)=-0.01;
+	weights(1,0)=-0.40;
+	weights(2,0)=-0.01;
 
-	weights(1,0)=0;
+	weights(0,1)=0;
 	weights(1,1)=weight11;
-	weights(1,2)=-0.20;
+	weights(2,1)=-0.20;
 
 	kernel->set_matrix_weights(weights);
 
@@ -886,7 +879,7 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_ARD_kernel2)
 		mean, labels_train, lik, latent_features_train);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	float64_t scale=4.0;
 	inf->set_scale(scale);
@@ -900,22 +893,19 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_ARD_kernel2)
 		inf->get_negative_log_marginal_likelihood_derivatives(parameter_dictionary);
 
 	// get parameters to compute derivatives
-	TParameter* scale_param=inf->m_gradient_parameters->get_parameter("scale");
-	TParameter* sigma_param=lik->m_gradient_parameters->get_parameter("sigma");
-	TParameter* noise_param=inf->m_gradient_parameters->get_parameter("inducing_noise");
-	TParameter* weights_param=kernel->m_gradient_parameters->get_parameter("weights");
+	TParameter* scale_param=inf->m_gradient_parameters->get_parameter("log_scale");
+	TParameter* sigma_param=lik->m_gradient_parameters->get_parameter("log_sigma");
+	TParameter* noise_param=inf->m_gradient_parameters->get_parameter("log_inducing_noise");
+	TParameter* weights_param=kernel->m_gradient_parameters->get_parameter("log_weights");
 	TParameter* mean_param=mean->m_gradient_parameters->get_parameter("mean");
 
-	float64_t dnlZ_sf2=scale*(gradient->get_element(scale_param))[0];
+	float64_t dnlZ_sf2=(gradient->get_element(scale_param))[0];
 	float64_t dnlZ_lik=(gradient->get_element(sigma_param))[0];
 	float64_t dnlZ_noise=(gradient->get_element(noise_param))[0];
 	float64_t dnlZ_mean=(gradient->get_element(mean_param))[0];
 
 	SGVector<float64_t> dnlz_weights_vec=gradient->get_element(weights_param);
-	SGMatrix<float64_t> dnlz_weights(dnlz_weights_vec.vector,t_dim, dim, false);
-	//diagonal elements are in the log domain
-	dnlz_weights(0,0)*=weight00;
-	dnlz_weights(1,1)*=weight11;
+	//SGMatrix<float64_t> dnlz_weights(dnlz_weights_vec.vector,t_dim, dim, false);
 
 	dnlZ_lik+=dnlZ_noise;
 
@@ -934,23 +924,19 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_ARD_kernel2)
 	//diagonal elements of the matrix are in the log domain
 	//while off-diagonal elements are in natrual domain
 
-	EXPECT_NEAR(dnlz_weights(0,0), 0.014310121599512, 1E-10);
-	EXPECT_NEAR(dnlz_weights(0,1), -1.258335093159427, 1E-10);
-	EXPECT_NEAR(dnlz_weights(0,2), 0.021881344855798, 1E-10);
+	EXPECT_NEAR(dnlz_weights_vec[0], 0.014310121599512, 1E-10);
+	EXPECT_NEAR(dnlz_weights_vec[1], -1.258335093159427, 1E-10);
+	EXPECT_NEAR(dnlz_weights_vec[2], 0.021881344855798, 1E-10);
 
-	//dnlz_weights(1,0) should be different (non-zero)
-	//since the kernel matrix in the Shogun's implementation does not
-	//have the "upper triangular matrix" constraint
-	EXPECT_NEAR(dnlz_weights(1,1), 0.004443216429718, 1E-10);
-	EXPECT_NEAR(dnlz_weights(1,2), -1.253522960589666, 1E-10);
-
+	EXPECT_NEAR(dnlz_weights_vec[3], 0.004443216429718, 1E-10);
+	EXPECT_NEAR(dnlz_weights_vec[4], -1.253522960589666, 1E-10);
 
 	EXPECT_NEAR(dnlZ_lik, 0.095062798184398,1E-10);
 	EXPECT_NEAR(dnlZ_mean, 0.080187488475807, 1E-10);
 	EXPECT_NEAR(dnlZ_sf2, 5.226913608720613, 1E-10);
 
 	//Note that in the latest GPML3.5, derivatives wrt xu (covSEfact) does not support yet
-	//In Shohun's implementation, the derivatives wrt xu are supported. 
+	//In Shohun's implementation, the derivatives wrt xu are supported.
 	//TParameter* lat_param=inf->m_gradient_parameters->get_parameter("inducing_features");
 	//SGVector<float64_t> tmp=gradient->get_element(lat_param);
 	//SGMatrix<float64_t> deriv_lat(tmp.vector, dim, m, false);
@@ -1008,13 +994,12 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_inducing_featur
 	CRegressionLabels* labels_train=new CRegressionLabels(lab_train);
 
 	// choose Gaussian kernel with sigma = 2 and zero mean function
-	float64_t ell=1.0;
-	CLinearARDKernel* kernel=new CGaussianARDFITCKernel(10, 2*ell*ell);
+	CGaussianARDSparseKernel* kernel=new CGaussianARDSparseKernel(10);
 	float64_t weight1=3.0;
 	float64_t weight2=2.0;
 	SGVector<float64_t> weights(2);
 	weights[0]=1.0/weight1;
-	weights[1]=1.0/weight2;//bug missing parameter
+	weights[1]=1.0/weight2;
 	kernel->set_vector_weights(weights);
 
 	CZeroMean* mean=new CZeroMean();
@@ -1028,7 +1013,7 @@ TEST(FITCInferenceMethod,get_marginal_likelihood_derivatives_for_inducing_featur
 		mean, labels_train, lik, latent_features_train);
 
 	float64_t ind_noise=1e-6*CMath::sq(sigma);
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	float64_t scale=3.0;
 	inf->set_scale(scale);

@@ -171,7 +171,7 @@ float64_t CSingleLaplacianInferenceMethodWithLBFGS::evaluate(
 	/* Note that alpha = alpha_pre_iter - step * gradient_pre_iter */
 
 	/* Unfortunately we can not use dynamic_cast to cast the void * pointer to an
-	 * object pointer. Therefore, make sure this method is private.  
+	 * object pointer. Therefore, make sure this method is private.
 	 */
 	CSingleLaplacianInferenceMethodWithLBFGS * obj_prt
 		= static_cast<CSingleLaplacianInferenceMethodWithLBFGS *>(obj);
@@ -222,11 +222,11 @@ void CSingleLaplacianInferenceMethodWithLBFGS::update_alpha()
 	/* In order to use the provided lbfgs function, we have to pass the object via
 	 * void * pointer, which the evaluate method will use static_cast to cast
 	 * the pointer to an object pointer.
-	 * Therefore, make sure the evaluate method is a private method of the class. 
+	 * Therefore, make sure the evaluate method is a private method of the class.
 	 * Because the evaluate method is defined in a class, we have to pass the
 	 * method pointer to the lbfgs function via static method
 	 * If we also use the progress method, make sure the method is static and
-	 * private. 
+	 * private.
 	 */
 	void * obj_prt = static_cast<void *>(this);
 
@@ -236,9 +236,9 @@ void CSingleLaplacianInferenceMethodWithLBFGS::update_alpha()
 	/* clean up*/
 	m_mean_f = NULL;
 
-	/* Note that ret should be zero if the minimization 
+	/* Note that ret should be zero if the minimization
 	 * process terminates without an error.
-	 * A non-zero value indicates an error. 
+	 * A non-zero value indicates an error.
 	 */
 	if (m_enable_newton_if_fail && ret != 0 && ret != LBFGS_ALREADY_MINIMIZED)
 	{
@@ -250,7 +250,7 @@ void CSingleLaplacianInferenceMethodWithLBFGS::update_alpha()
 		return;
 	}
 	/* compute f = K * alpha + m*/
-	eigen_mu = eigen_ktrtr * (eigen_alpha * CMath::sq(m_scale)) + eigen_mean_f;
+	eigen_mu = eigen_ktrtr * (eigen_alpha * CMath::exp(m_log_scale*2.0)) + eigen_mean_f;
 }
 
 void CSingleLaplacianInferenceMethodWithLBFGS::get_psi_wrt_alpha(
@@ -268,7 +268,7 @@ void CSingleLaplacianInferenceMethodWithLBFGS::get_psi_wrt_alpha(
 		m_mean_f->vlen);
 	/* f = K * alpha + mean_f given alpha*/
 	eigen_f
-		= kernel * ((eigen_alpha) * CMath::sq(m_scale)) + eigen_mean_f;
+		= kernel * ((eigen_alpha) * CMath::exp(m_log_scale*2.0)) + eigen_mean_f;
 
 	/* psi = 0.5 * alpha .* (f - m) - sum(dlp)*/
 	psi = eigen_alpha.dot(eigen_f - eigen_mean_f) * 0.5;
@@ -291,7 +291,7 @@ void CSingleLaplacianInferenceMethodWithLBFGS::get_gradient_wrt_alpha(
 		m_mean_f->vlen);
 
 	/* f = K * alpha + mean_f given alpha*/
-	eigen_f = kernel * ((eigen_alpha) * CMath::sq(m_scale)) + eigen_mean_f;
+	eigen_f = kernel * ((eigen_alpha) * CMath::exp(m_log_scale*2.0)) + eigen_mean_f;
 
 	SGVector<float64_t> dlp_f =
 		m_model->get_log_probability_derivative_f(m_labels, f, 1);
@@ -299,7 +299,7 @@ void CSingleLaplacianInferenceMethodWithLBFGS::get_gradient_wrt_alpha(
 	Eigen::Map<Eigen::VectorXd> eigen_dlp_f(dlp_f.vector, dlp_f.vlen);
 
 	/* g_alpha = K * (alpha - dlp_f)*/
-	eigen_gradient = kernel * ((eigen_alpha - eigen_dlp_f) * CMath::sq(m_scale));
+	eigen_gradient = kernel * ((eigen_alpha - eigen_dlp_f) * CMath::exp(m_log_scale*2.0));
 }
 
 } /* namespace shogun */

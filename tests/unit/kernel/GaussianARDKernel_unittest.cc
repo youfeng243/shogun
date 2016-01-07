@@ -80,9 +80,9 @@ TEST(GaussianARDKernel_scalar,get_kernel_matrix)
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 
 	float64_t ell=2.0;
-	CLinearARDKernel* kernel=new CGaussianARDKernel(10, 2*ell*ell);
+	CExponentialARDKernel* kernel=new CGaussianARDKernel(10);
 	float64_t weight=0.5;
-	kernel->set_scalar_weights(weight);
+	kernel->set_scalar_weights(weight/ell);
 
 	float64_t ell2=ell/weight;
 	CGaussianKernel* kernel2=new CGaussianKernel(10, 2*ell2*ell2);
@@ -163,13 +163,12 @@ TEST(GaussianARDKernel_scalar,get_parameter_gradient)
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 
 	float64_t ell=4.0;
-	CLinearARDKernel* kernel=new CGaussianARDKernel(10, 2*ell*ell);
+	CExponentialARDKernel* kernel=new CGaussianARDKernel(10);
 	float64_t weight=1.0;
-	kernel->set_scalar_weights(weight);
+	kernel->set_scalar_weights(weight/ell);
 
 	float64_t ell2=ell/weight;
 	CGaussianKernel* kernel2=new CGaussianKernel(10, 2*ell2*ell2);
-
 
 	SG_REF(features_train)
 	SG_REF(latent_features_train)
@@ -177,8 +176,8 @@ TEST(GaussianARDKernel_scalar,get_parameter_gradient)
 	kernel->init(features_train, latent_features_train);
 	kernel2->init(features_train, latent_features_train);
 
-	TParameter* width_param=kernel->m_gradient_parameters->get_parameter("width");
-	TParameter* width_param2=kernel2->m_gradient_parameters->get_parameter("width");
+	TParameter* width_param=kernel->m_gradient_parameters->get_parameter("log_weights");
+	TParameter* width_param2=kernel2->m_gradient_parameters->get_parameter("log_width");
 
 	SGMatrix<float64_t> mat=kernel->get_parameter_gradient(width_param);
 	SGMatrix<float64_t> mat2=kernel2->get_parameter_gradient(width_param2);
@@ -186,8 +185,8 @@ TEST(GaussianARDKernel_scalar,get_parameter_gradient)
 	{
 		for(int32_t j=0;j<mat.num_cols;j++)
 		{
-			abs_tolerance=CMath::get_abs_tolerance(mat2(i,j),rel_tolerance);
-			EXPECT_NEAR(mat(i,j),mat2(i,j),abs_tolerance);
+			abs_tolerance=CMath::get_abs_tolerance(-mat2(i,j),rel_tolerance);
+			EXPECT_NEAR(mat(i,j),-mat2(i,j),abs_tolerance);
 		}
 	}
 
@@ -200,8 +199,8 @@ TEST(GaussianARDKernel_scalar,get_parameter_gradient)
 	{
 		for(int32_t j=0;j<mat.num_cols;j++)
 		{
-			abs_tolerance=CMath::get_abs_tolerance(mat2(i,j),rel_tolerance);
-			EXPECT_NEAR(mat(i,j),mat2(i,j),abs_tolerance);
+			abs_tolerance=CMath::get_abs_tolerance(-mat2(i,j),rel_tolerance);
+			EXPECT_NEAR(mat(i,j),-mat2(i,j),abs_tolerance);
 		}
 	}
 
@@ -211,7 +210,6 @@ TEST(GaussianARDKernel_scalar,get_parameter_gradient)
 	SG_UNREF(features_train)
 	SG_UNREF(latent_features_train)
 }
-
 
 TEST(GaussianARDKernel_vector,get_kernel_matrix)
 {
@@ -250,16 +248,15 @@ TEST(GaussianARDKernel_vector,get_kernel_matrix)
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 
 
-	float64_t ell=1.0;
-	CLinearARDKernel* kernel=new CGaussianARDKernel(10, 2*ell*ell);
-	
+	CExponentialARDKernel* kernel=new CGaussianARDKernel(10);
+
 	float64_t weight1=6.0;
 	float64_t weight2=3.0;
 	SGVector<float64_t> weights(dim);
 	weights[0]=1.0/weight1;
 	weights[1]=1.0/weight2;
 	kernel->set_vector_weights(weights);
-	
+
 	SG_REF(latent_features_train)
 	SG_REF(features_train)
 	kernel->init(features_train, latent_features_train);
@@ -314,14 +311,14 @@ TEST(GaussianARDKernel_vector,get_kernel_matrix)
 	EXPECT_NEAR(mat(5,1),  0.006010671270288,  abs_tolerance);
 	abs_tolerance = CMath::get_abs_tolerance(0.031352436711192, rel_tolerance);
 	EXPECT_NEAR(mat(5,2),  0.031352436711192,  abs_tolerance);
-	
+
 
 	kernel->init(latent_features_train, latent_features_train);
 	//result from GPML 3.5
 	//1.000000000000000   0.001138802761346   0.025208965963144
 	//0.001138802761346   1.000000000000000   0.000436766814255
 	//0.025208965963144   0.000436766814255   1.000000000000000
-	
+
 	mat=kernel->get_kernel_matrix();
 	abs_tolerance = CMath::get_abs_tolerance(1.000000000000000, rel_tolerance);
 	EXPECT_NEAR(mat(0,0),  1.000000000000000,  abs_tolerance);
@@ -343,7 +340,7 @@ TEST(GaussianARDKernel_vector,get_kernel_matrix)
 	EXPECT_NEAR(mat(2,1),  0.000436766814255,  abs_tolerance);
 	abs_tolerance = CMath::get_abs_tolerance(1.000000000000000, rel_tolerance);
 	EXPECT_NEAR(mat(2,2),  1.000000000000000,  abs_tolerance);
-	
+
 	// cleanup
 	SG_UNREF(kernel);
 	SG_UNREF(latent_features_train)
@@ -379,22 +376,21 @@ TEST(GaussianARDKernel_matrix,get_kernel_matrix1)
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 	CDenseFeatures<float64_t>* latent_features_train2=new CDenseFeatures<float64_t>(lat_feat_train2);
 
-	float64_t ell=1.0;
-	CLinearARDKernel* kernel=new CGaussianARDKernel(10, 2*ell*ell);
-	
+	CExponentialARDKernel* kernel=new CGaussianARDKernel(10);
+
 	int32_t t_dim=2;
 	SGMatrix<float64_t> weights(t_dim,dim);
-	//the weights is a upper triangular matrix since GPML 3.5 only supports this type
+	//the weights is a lower triangular matrix
 	float64_t weight1=0.02;
 	float64_t weight2=-0.4;
 	float64_t weight3=0;
 	float64_t weight4=0.01;
 	weights(0,0)=weight1;
-	weights(0,1)=weight2;
-	weights(1,0)=weight3;
+	weights(1,0)=weight2;
+	weights(0,1)=weight3;
 	weights(1,1)=weight4;
 	kernel->set_matrix_weights(weights);
-	
+
 	SG_REF(latent_features_train)
 	SG_REF(latent_features_train2)
 
@@ -424,13 +420,12 @@ TEST(GaussianARDKernel_matrix,get_kernel_matrix1)
 	EXPECT_NEAR(mat(2,1),  0.053362341348083,  abs_tolerance);
 	abs_tolerance = CMath::get_abs_tolerance(1.000000000000000, rel_tolerance);
 	EXPECT_NEAR(mat(2,2),  1.000000000000000,  abs_tolerance);
-	
+
 	// cleanup
 	SG_UNREF(kernel);
 	SG_UNREF(latent_features_train)
 	SG_UNREF(latent_features_train2)
 }
-
 
 TEST(GaussianARDKernel_matrix,get_kernel_matrix2)
 {
@@ -469,22 +464,21 @@ TEST(GaussianARDKernel_matrix,get_kernel_matrix2)
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 
 
-	float64_t ell=1.0;
-	CLinearARDKernel* kernel=new CGaussianARDKernel(10, 2*ell*ell);
-	
+	CExponentialARDKernel* kernel=new CGaussianARDKernel(10);
+
 	int32_t t_dim=2;
 	SGMatrix<float64_t> weights(t_dim,dim);
-	//the weights is a upper triangular matrix since GPML 3.5 only supports this type
+	//the weights is a lower triangular matrix
 	float64_t weight1=0.02;
 	float64_t weight2=-0.4;
 	float64_t weight3=0;
 	float64_t weight4=0.01;
 	weights(0,0)=weight1;
-	weights(0,1)=weight2;
-	weights(1,0)=weight3;
+	weights(1,0)=weight2;
+	weights(0,1)=weight3;
 	weights(1,1)=weight4;
 	kernel->set_matrix_weights(weights);
-	
+
 	SG_REF(latent_features_train)
 	SG_REF(features_train)
 	kernel->init(features_train, latent_features_train);
@@ -567,7 +561,7 @@ TEST(GaussianARDKernel_matrix,get_kernel_matrix2)
 	EXPECT_NEAR(mat(2,1),  0.053362341348083,  abs_tolerance);
 	abs_tolerance = CMath::get_abs_tolerance(1.000000000000000, rel_tolerance);
 	EXPECT_NEAR(mat(2,2),  1.000000000000000,  abs_tolerance);
-	
+
 	// cleanup
 	SG_UNREF(kernel);
 	SG_UNREF(latent_features_train)
@@ -610,9 +604,8 @@ TEST(GaussianARDKernel,get_kernel_diagonal)
 	CDenseFeatures<float64_t>* features_train=new CDenseFeatures<float64_t>(feat_train);
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 
-	float64_t ell=0.5;
-	CLinearARDKernel* kernel=new CGaussianARDKernel(10, 2*ell*ell);
-	
+	CExponentialARDKernel* kernel=new CGaussianARDKernel(10);
+
 	int32_t t_dim=2;
 	SGMatrix<float64_t> weights(t_dim,dim);
 	//the weights is a upper triangular matrix since GPML 3.5 only supports this type
@@ -696,9 +689,9 @@ TEST(GaussianARDKernel,get_parameter_gradient_diagonal)
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 
 	float64_t ell=4.0;
-	CLinearARDKernel* kernel=new CGaussianARDKernel(10, 2*ell*ell);
+	CExponentialARDKernel* kernel=new CGaussianARDKernel(10);
 	float64_t weight=1.0;
-	kernel->set_scalar_weights(weight);
+	kernel->set_scalar_weights(weight/ell);
 
 	float64_t ell2=ell/weight;
 	CGaussianKernel* kernel2=new CGaussianKernel(10, 2*ell2*ell2);
@@ -709,15 +702,15 @@ TEST(GaussianARDKernel,get_parameter_gradient_diagonal)
 	kernel->init(features_train, latent_features_train);
 	kernel2->init(features_train, latent_features_train);
 
-	TParameter* width_param=kernel->m_gradient_parameters->get_parameter("width");
-	TParameter* width_param2=kernel2->m_gradient_parameters->get_parameter("width");
+	TParameter* width_param=kernel->m_gradient_parameters->get_parameter("log_weights");
+	TParameter* width_param2=kernel2->m_gradient_parameters->get_parameter("log_width");
 
 	SGVector<float64_t> vec=kernel->get_parameter_gradient_diagonal(width_param);
 	SGVector<float64_t> vec2=kernel2->get_parameter_gradient_diagonal(width_param2);
 	for(int32_t j=0;j<vec.vlen;j++)
 	{
-		abs_tolerance=CMath::get_abs_tolerance(vec2[j],rel_tolerance);
-		EXPECT_NEAR(vec[j],vec2[j],abs_tolerance);
+		abs_tolerance=CMath::get_abs_tolerance(-vec2[j],rel_tolerance);
+		EXPECT_NEAR(vec[j],-vec2[j],abs_tolerance);
 	}
 
 	kernel->init(features_train, features_train);
@@ -727,8 +720,8 @@ TEST(GaussianARDKernel,get_parameter_gradient_diagonal)
 	vec2=kernel2->get_parameter_gradient_diagonal(width_param2);
 	for(int32_t j=0;j<vec.vlen;j++)
 	{
-		abs_tolerance=CMath::get_abs_tolerance(vec2[j],rel_tolerance);
-		EXPECT_NEAR(vec[j],vec2[j],abs_tolerance);
+		abs_tolerance=CMath::get_abs_tolerance(-vec2[j],rel_tolerance);
+		EXPECT_NEAR(vec[j],-vec2[j],abs_tolerance);
 	}
 
 	// cleanup
@@ -737,5 +730,4 @@ TEST(GaussianARDKernel,get_parameter_gradient_diagonal)
 	SG_UNREF(features_train)
 	SG_UNREF(latent_features_train)
 }
-
 #endif /* HAVE_LINALG_LIB */

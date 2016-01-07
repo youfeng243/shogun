@@ -31,7 +31,7 @@
  * Code adapted from
  * Gaussian Process Machine Learning Toolbox
  * http://www.gaussianprocess.org/gpml/code/matlab/doc/
- * and 
+ * and
  * https://gist.github.com/yorkerlin/8a36e8f9b298aa0246a4
  */
 
@@ -79,15 +79,13 @@ SGVector<float64_t> CGaussianProcessMachine::get_posterior_means(CFeatures* data
 
 	CFeatures* feat;
 
-	// use inducing features for FITC inference method
-	if (m_method->get_inference_type()==INF_FITC_REGRESSION ||
-		m_method->get_inference_type()==INF_FITC_LAPLACIAN_SINGLE)
+	CSingleSparseInferenceBase* sparse_method=
+		dynamic_cast<CSingleSparseInferenceBase *>(m_method);
+	// use inducing features for sparse inference method
+	if (sparse_method)
 	{
-		CSingleFITCLaplacianBase* fitc_method=
-			dynamic_cast<CSingleFITCLaplacianBase *>(m_method);
-		REQUIRE(fitc_method, "Inference method %s does not support FITC inference\n",
-			m_method->get_name());
-		feat=fitc_method->get_inducing_features();
+		sparse_method->optimize_inducing_features();
+		feat=sparse_method->get_inducing_features();
 	}
 	else
 		feat=m_method->get_features();
@@ -141,15 +139,15 @@ SGVector<float64_t> CGaussianProcessMachine::get_posterior_variances(
 
 	CFeatures* feat;
 
-	// use inducing features for FITC inference method
-	if (m_method->get_inference_type()==INF_FITC_REGRESSION ||
-		m_method->get_inference_type()==INF_FITC_LAPLACIAN_SINGLE)
+	bool is_sparse=false;
+	CSingleSparseInferenceBase* sparse_method=
+		dynamic_cast<CSingleSparseInferenceBase *>(m_method);
+	// use inducing features for sparse inference method
+	if (sparse_method)
 	{
-		CSingleFITCLaplacianBase* fitc_method=
-			dynamic_cast<CSingleFITCLaplacianBase *>(m_method);
-		REQUIRE(fitc_method, "Inference method %s must support FITC inference\n",
-			m_method->get_name());
-		feat=fitc_method->get_inducing_features();
+		sparse_method->optimize_inducing_features();
+		feat=sparse_method->get_inducing_features();
+		is_sparse=true;
 	}
 	else
 		feat=m_method->get_features();
@@ -160,7 +158,6 @@ SGVector<float64_t> CGaussianProcessMachine::get_posterior_variances(
 	CKernel* training_kernel=m_method->get_kernel();
 	CKernel* kernel=CKernel::obtain_from_generic(training_kernel->clone());
 	SG_UNREF(training_kernel);
-
 	kernel->init(data, data);
 
 	// get kernel matrix and create eigen representation of it
@@ -197,7 +194,7 @@ SGVector<float64_t> CGaussianProcessMachine::get_posterior_variances(
 	SGVector<float64_t> s2(m*C*C);
 	Map<VectorXd> eigen_s2(s2.vector, s2.vlen);
 
-	if (eigen_L.isUpperTriangular())
+	if (eigen_L.isUpperTriangular() && !is_sparse)
 	{
 		if (alpha.vlen==L.num_rows)
 		{
@@ -205,7 +202,6 @@ SGVector<float64_t> CGaussianProcessMachine::get_posterior_variances(
 			// get shogun of diagonal sigma vector and create eigen representation
 			SGVector<float64_t> sW=m_method->get_diagonal_vector();
 			Map<VectorXd> eigen_sW(sW.vector, sW.vlen);
-
 			// solve L' * V = sW * Ks and compute V.^2
 			MatrixXd eigen_V=eigen_L.triangularView<Upper>().adjoint().solve(
 				eigen_sW.asDiagonal()*eigen_Ks);

@@ -37,7 +37,7 @@
 #include <shogun/kernel/GaussianKernel.h>
 #include <shogun/machine/gp/ConstMean.h>
 #include <shogun/machine/gp/ZeroMean.h>
-#include <shogun/machine/gp/GaussianARDFITCKernel.h>
+#include <shogun/machine/gp/GaussianARDSparseKernel.h>
 #include <shogun/machine/gp/SingleFITCLaplacianInferenceMethodWithLBFGS.h>
 #include <shogun/machine/gp/LogitLikelihood.h>
 #include <shogun/mathematics/Math.h>
@@ -91,19 +91,17 @@ TEST(SingleFITCLaplacianInferenceMethodWithLBFGS,get_cholesky)
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 	CBinaryLabels* labels_train=new CBinaryLabels(lab_train);
 
-	float64_t ell=1.0;
-
-	CLinearARDKernel* kernel=new CGaussianARDFITCKernel(10, 2*ell*ell);
+	CGaussianARDSparseKernel* kernel=new CGaussianARDSparseKernel(10);
 	int32_t t_dim=2;
-	SGMatrix<float64_t> weights(t_dim,dim);
+	SGMatrix<float64_t> weights(dim,t_dim);
 	//the weights is a upper triangular matrix since GPML 3.5 only supports this type
 	float64_t weight1=0.02;
 	float64_t weight2=-0.4;
 	float64_t weight3=0;
 	float64_t weight4=0.01;
 	weights(0,0)=weight1;
-	weights(0,1)=weight2;
-	weights(1,0)=weight3;
+	weights(1,0)=weight2;
+	weights(0,1)=weight3;
 	weights(1,1)=weight4;
 	kernel->set_matrix_weights(weights);
 
@@ -117,7 +115,7 @@ TEST(SingleFITCLaplacianInferenceMethodWithLBFGS,get_cholesky)
 		mean, labels_train, lik, latent_features_train);
 
 	float64_t ind_noise=1e-6;
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	float64_t scale=4.0;
 	inf->set_scale(scale);
@@ -199,19 +197,17 @@ TEST(SingleFITCLaplacianInferenceMethodWithLBFGS,get_alpha)
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 	CBinaryLabels* labels_train=new CBinaryLabels(lab_train);
 
-	float64_t ell=1.0;
-
-	CLinearARDKernel* kernel=new CGaussianARDFITCKernel(10, 2*ell*ell);
+	CGaussianARDSparseKernel* kernel=new CGaussianARDSparseKernel(10);
 	int32_t t_dim=2;
-	SGMatrix<float64_t> weights(t_dim,dim);
+	SGMatrix<float64_t> weights(dim,t_dim);
 	//the weights is a upper triangular matrix since GPML 3.5 only supports this type
 	float64_t weight1=0.02;
 	float64_t weight2=-0.4;
 	float64_t weight3=0;
 	float64_t weight4=0.01;
 	weights(0,0)=weight1;
-	weights(0,1)=weight2;
-	weights(1,0)=weight3;
+	weights(1,0)=weight2;
+	weights(0,1)=weight3;
 	weights(1,1)=weight4;
 	kernel->set_matrix_weights(weights);
 
@@ -225,7 +221,7 @@ TEST(SingleFITCLaplacianInferenceMethodWithLBFGS,get_alpha)
 		mean, labels_train, lik, latent_features_train);
 
 	float64_t ind_noise=1e-6;
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	float64_t scale=4.0;
 	inf->set_scale(scale);
@@ -294,10 +290,9 @@ TEST(SingleFITCLaplacianInferenceMethodWithLBFGS,get_negative_log_marginal_likel
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 	CBinaryLabels* labels_train=new CBinaryLabels(lab_train);
 
-	float64_t ell=1.0;
 	float64_t weight1=2.0;
 	float64_t weight2=3.0;
-	CLinearARDKernel* kernel=new CGaussianARDFITCKernel(10, 2*ell*ell);
+	CGaussianARDSparseKernel* kernel=new CGaussianARDSparseKernel(10);
 	SGVector<float64_t> weights(2);
 	weights[0]=1.0/weight1;
 	weights[1]=1.0/weight2;
@@ -312,7 +307,7 @@ TEST(SingleFITCLaplacianInferenceMethodWithLBFGS,get_negative_log_marginal_likel
 		mean, labels_train, lik, latent_features_train);
 
 	float64_t ind_noise=1e-6;
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	float64_t scale=5.0;
 	inf->set_scale(scale);
@@ -375,10 +370,9 @@ TEST(SingleFITCLaplacianInferenceMethodWithLBFGS,get_marginal_likelihood_derivat
 	CDenseFeatures<float64_t>* latent_features_train=new CDenseFeatures<float64_t>(lat_feat_train);
 	CBinaryLabels* labels_train=new CBinaryLabels(lab_train);
 
-	float64_t ell=1.0;
 	float64_t weight1=2.0;
 	float64_t weight2=3.0;
-	CLinearARDKernel* kernel=new CGaussianARDFITCKernel(10, 2*ell*ell);
+	CGaussianARDSparseKernel* kernel=new CGaussianARDSparseKernel(10);
 	SGVector<float64_t> weights(2);
 	weights[0]=1.0/weight1;
 	weights[1]=1.0/weight2;
@@ -393,7 +387,7 @@ TEST(SingleFITCLaplacianInferenceMethodWithLBFGS,get_marginal_likelihood_derivat
 		mean, labels_train, lik, latent_features_train);
 
 	float64_t ind_noise=1e-6;
-	inf->set_inducing_noise(ind_noise); 
+	inf->set_inducing_noise(ind_noise);
 
 	float64_t scale=5.0;
 	inf->set_scale(scale);
@@ -407,21 +401,21 @@ TEST(SingleFITCLaplacianInferenceMethodWithLBFGS,get_marginal_likelihood_derivat
 		inf->get_negative_log_marginal_likelihood_derivatives(parameter_dictionary);
 
 	// result from GPML 3.4 package:
-	//dnlz = 
+	//dnlz =
 	//mean: []
 	//cov: [0.889369895665482 0.260954643384094 0.579311763908738]
 	//lik: []
 	//dnlz.xu'
 	//0.140255088672368  -0.060040496377590  -0.157432965446797
 	//0.125896281241220  -0.067325533249551  -0.007553979244171
-	// 
+	//
 	// get parameters to compute derivatives
-	TParameter* scale_param=inf->m_gradient_parameters->get_parameter("scale");
-	TParameter* weights_param=kernel->m_gradient_parameters->get_parameter("weights");
+	TParameter* scale_param=inf->m_gradient_parameters->get_parameter("log_scale");
+	TParameter* weights_param=kernel->m_gradient_parameters->get_parameter("log_weights");
 
-	float64_t dnlz_weight1=(-1.0/weight1)*(gradient->get_element(weights_param))[0];
-	float64_t dnlz_weight2=(-1.0/weight2)*(gradient->get_element(weights_param))[1];
-	float64_t dnlZ_sf2=scale*(gradient->get_element(scale_param))[0];
+	float64_t dnlz_weight1=-(gradient->get_element(weights_param))[0];
+	float64_t dnlz_weight2=-(gradient->get_element(weights_param))[1];
+	float64_t dnlZ_sf2=(gradient->get_element(scale_param))[0];
 
 	TParameter* lat_param=inf->m_gradient_parameters->get_parameter("inducing_features");
 	SGVector<float64_t> dnlZ_lat=gradient->get_element(lat_param);
@@ -448,7 +442,7 @@ TEST(SingleFITCLaplacianInferenceMethodWithLBFGS,get_marginal_likelihood_derivat
 	EXPECT_NEAR(deriv_lat(1,1),  -0.067325533249551,  abs_tolorance);
 	abs_tolorance = CMath::get_abs_tolerance(-0.007553979244171, rel_tolorance);
 	EXPECT_NEAR(deriv_lat(1,2),  -0.007553979244171,  abs_tolorance);
-	
+
 	// clean up
 	SG_UNREF(gradient);
 	SG_UNREF(parameter_dictionary);

@@ -36,7 +36,7 @@
 
 #ifdef HAVE_EIGEN3
 
-#include <shogun/machine/gp/FITCInferenceBase.h>
+#include <shogun/machine/gp/SingleSparseInferenceBase.h>
 #include <shogun/lib/Lock.h>
 
 namespace shogun
@@ -48,7 +48,7 @@ namespace shogun
  * This base class implements the (explicit) derivatives of negative log marginal likelihood
  * wrt hyperparameter for FITC regression and FITC single Laplace.
  * For FITC single Laplace, we can compute further implicit derivatives.
- * For FITC regression, these explicit derivatives are the full derivatives. 
+ * For FITC regression, these explicit derivatives are the full derivatives.
  *
  * For more details, see Quiñonero-Candela, Joaquin, and Carl Edward Rasmussen.
  * "A unifying view of sparse approximate Gaussian process regression."
@@ -67,7 +67,7 @@ namespace shogun
  * The default time complexity of the kernel method can be O(n^2)
  *
  */
-class CSingleFITCLaplacianBase: public CFITCInferenceBase
+class CSingleFITCLaplacianBase: public CSingleSparseInferenceBase
 {
 public:
 	/** default constructor */
@@ -90,25 +90,11 @@ public:
 
 	/** returns the name of the inference method
 	 *
-	 * @return name SingleFITCLaplacianBase 
+	 * @return name SingleFITCLaplacianBase
 	 */
 	virtual const char* get_name() const { return "SingleFITCLaplacianBase"; }
 
-	/** set kernel
-	 *
-	 * @param kern kernel to set
-	 */
-	virtual void set_kernel(CKernel* kern);
 protected:
-	/** check whether the provided kernel can
-	 * compute the gradient wrt inducing features
-	 *
-	 * Note that currently we check the name of the provided kernel
-	 * to determine whether the kernel can compute the derivatives wrt inducing_features
-	 *
-	 * The name of a supported Kernel must end with "FITCKernel"
-	 */
-	virtual void check_fully_FITC();
 
 	/** compute variables which are required to compute negative log marginal
 	 * likelihood full derivatives wrt  cov-like hyperparameter \f$\theta\f$
@@ -187,7 +173,7 @@ protected:
 	virtual float64_t get_derivative_related_mean(SGVector<float64_t> dmu);
 
 	/** helper function to compute variables which are required to compute negative log marginal
-	 * likelihood derivatives wrt inducing features 
+	 * likelihood derivatives wrt inducing features
 	 *
 	 * Note that the kernel must support to compute the derivatives wrt inducing features
 	 *
@@ -210,16 +196,6 @@ protected:
 	virtual void update_deriv()=0;
 
 	/** returns derivative of negative log marginal likelihood wrt parameter of
-	 * CInferenceMethod class
-	 *
-	 * @param param parameter of given inference class
-	 *
-	 * @return derivative of negative log marginal likelihood
-	 */
-	virtual SGVector<float64_t> get_derivative_wrt_inference_method(
-			const TParameter* param);
-
-	/** returns derivative of negative log marginal likelihood wrt parameter of
 	 * likelihood model
 	 *
 	 * @param param parameter of given likelihood model
@@ -228,16 +204,6 @@ protected:
 	 */
 	virtual SGVector<float64_t> get_derivative_wrt_likelihood_model(
 			const TParameter* param)=0;
-
-	/** returns derivative of negative log marginal likelihood wrt kernel's
-	 * parameter
-	 *
-	 * @param param parameter of given kernel
-	 *
-	 * @return derivative of negative log marginal likelihood
-	 */
-	virtual SGVector<float64_t> get_derivative_wrt_kernel(
-			const TParameter* param);
 
 	/** returns derivative of negative log marginal likelihood wrt mean
 	 * function's parameter
@@ -277,22 +243,15 @@ protected:
 	/* w=B*al */
 	SGVector<float64_t> m_w;
 
-	/** Rvdd=W 
+	/** Rvdd=W
 	 * where W is defined in infFITC.m and Rvdd is defined in infFITC_Laplace.m
 	 * Note that W is NOT the diagonal matrix
 	 */
 	SGMatrix<float64_t> m_Rvdd;
 
-	/* a lock used to parallelly compute derivatives wrt hyperparameters */
-	CLock* m_lock;
-
-	/** whether the kernel supports 
-	 * to compute the derivatives wrt to inducing features
-	 */
-	bool m_fully_FITC;
-
 	/* V defined in infFITC.m and infFITC_Laplace.m */
 	SGMatrix<float64_t> m_V;
+
 private:
 	/* init */
 	void init();
